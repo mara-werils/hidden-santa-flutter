@@ -16,54 +16,81 @@ class HiddenSantaApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
         useMaterial3: true,
       ),
-      home: const AboutPage(),
+      home: const HomeScreen(),
     );
   }
 }
 
-class AboutPage extends StatelessWidget {
-  const AboutPage({super.key});
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.of(context).size;
+    final bool isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Hidden Santa'),
+        title: const Text('Hidden Santa - Home'),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              '🎅 Hidden Santa',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Participants',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: isPortrait ? 2 : 4,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 3 / 2,
+                    ),
+                    itemCount: 30, // Increased number of participants for scrolling
+                    itemBuilder: (context, index) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Participant ${index + 1}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // Placeholder for generate pairs
+                    },
+                    icon: const Icon(Icons.shuffle),
+                    label: const Text('Generate Secret Santa Pairs'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                  ),
+                )
+              ],
             ),
-            SizedBox(height: 16),
-            Text(
-              'Hidden Santa is a fun and simple mobile application designed to randomly assign Secret Santa gift-givers within a group. '
-                  'Users can input a list of participant names, and the app will automatically and anonymously generate gift-giving pairs, ensuring that no one is assigned to themselves. '
-                  'It’s perfect for holiday parties, team events, family gatherings, or any festive occasion.',
-              style: TextStyle(fontSize: 16, height: 1.4),
-            ),
-            SizedBox(height: 24),
-            Text(
-              'Credits:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Developed by Marlen, Dias, Azamat in the scope of the course “Crossplatform Development” at Astana IT University.\n'
-                  'Mentor (Teacher): Assistant Professor Abzal Kyzyrkanov',
-              style: TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
