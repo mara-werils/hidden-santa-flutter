@@ -1,28 +1,99 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   runApp(const HiddenSantaApp());
 }
 
-class HiddenSantaApp extends StatelessWidget {
+class HiddenSantaApp extends StatefulWidget {
   const HiddenSantaApp({super.key});
+
+  @override
+  State<HiddenSantaApp> createState() => _HiddenSantaAppState();
+}
+
+class _HiddenSantaAppState extends State<HiddenSantaApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+  Locale _locale = const Locale('kk');
+
+  void _toggleTheme(ThemeMode mode) {
+    setState(() {
+      _themeMode = mode;
+    });
+  }
+
+  void _changeLocale(Locale locale) {
+    setState(() {
+      _locale = locale;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Hidden Santa',
       debugShowCheckedModeBanner: false,
+      themeMode: _themeMode,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
+        brightness: Brightness.light,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.redAccent,
+          brightness: Brightness.light,
+        ),
         useMaterial3: true,
       ),
-      home: const MainScreen(),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.red,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      locale: _locale,
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ru'),
+        Locale('kk'),
+      ],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      localeResolutionCallback: (locale, supportedLocales) {
+        for (var supportedLocale in supportedLocales) {
+          if (supportedLocale.languageCode == locale?.languageCode) {
+            return supportedLocale;
+          }
+        }
+        return const Locale('en');
+      },
+      home: MainScreen(
+        currentThemeMode: _themeMode,
+        onThemeChanged: _toggleTheme,
+        onLocaleChanged: _changeLocale,
+        currentLocale: _locale,
+      ),
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final void Function(ThemeMode) onThemeChanged;
+  final ThemeMode currentThemeMode;
+  final void Function(Locale) onLocaleChanged;
+  final Locale currentLocale;
+
+  const MainScreen({
+    required this.onThemeChanged,
+    required this.currentThemeMode,
+    required this.onLocaleChanged,
+    required this.currentLocale,
+    super.key,
+  });
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -71,12 +142,12 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _editParticipantName(int index) async {
-    String newName = await showDialog(
+    String? newName = await showDialog(
       context: context,
       builder: (context) => NameTypingDialog(initialName: participants[index]),
     );
 
-    if (newName.isNotEmpty) {
+    if (newName != null && newName.isNotEmpty) {
       setState(() {
         participants[index] = newName;
         shuffledPairs.clear();
@@ -86,8 +157,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
-           body: IndexedStack(
+      body: IndexedStack(
         index: _selectedIndex,
         children: [
           HomeScreen(
@@ -98,16 +170,23 @@ class _MainScreenState extends State<MainScreen> {
             shuffledPairs: shuffledPairs,
           ),
           const AboutScreen(),
-          SettingsScreen(onUpdateParticipants: _updateParticipants, numParticipants: _numParticipants),
+          SettingsScreen(
+            onUpdateParticipants: _updateParticipants,
+            numParticipants: _numParticipants,
+            onThemeChanged: widget.onThemeChanged,
+            currentThemeMode: widget.currentThemeMode,
+            onLocaleChanged: widget.onLocaleChanged,
+            currentLocale: widget.currentLocale,
+          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.info), label: 'About'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.home), label: t.home),
+          BottomNavigationBarItem(icon: const Icon(Icons.info), label: t.about),
+          BottomNavigationBarItem(icon: const Icon(Icons.settings), label: t.settings),
         ],
       ),
     );
@@ -134,15 +213,15 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final crossAxisCount = isLandscape ? 4 : 2;
+    final t = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Participants', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          Text(t.participants, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          // Scrollable participants section
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -157,7 +236,15 @@ class HomeScreen extends StatelessWidget {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      child: Text(participants[index], style: const TextStyle(fontSize: 16)),
+                      child: Text(
+                        participants[index],
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.black
+                              : null,
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -173,7 +260,7 @@ class HomeScreen extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onShuffle,
                 icon: const Icon(Icons.shuffle),
-                label: const Text('Generate Pairs'),
+                label: Text(t.generatePairs),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
                   foregroundColor: Colors.white,
@@ -183,7 +270,7 @@ class HomeScreen extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onReset,
                 icon: const Icon(Icons.restart_alt),
-                label: const Text('Reset'),
+                label: Text(t.reset),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey,
                   foregroundColor: Colors.white,
@@ -193,11 +280,9 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          // Scrollable content section (Generated Pairs)
           if (shuffledPairs.isNotEmpty) ...[
-            const Text('Secret Santa Pairs:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(t.secretSantaPairs, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
-            // Scrollable generated pairs section
             Expanded(
               child: SizedBox(
                 width: double.infinity,
@@ -208,7 +293,15 @@ class HomeScreen extends StatelessWidget {
                       margin: const EdgeInsets.symmetric(vertical: 5),
                       color: Colors.red.shade50,
                       child: ListTile(
-                        title: Text(shuffledPairs[index], textAlign: TextAlign.center),
+                        title: Text(
+                          shuffledPairs[index],
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.black
+                                : null,
+                          ),
+                        ),
                       ),
                     );
                   },
@@ -231,27 +324,28 @@ class NameTypingDialog extends StatefulWidget {
 }
 
 class _NameTypingDialogState extends State<NameTypingDialog> {
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _controller.text = widget.initialName; // Initialize with the existing name
+    _controller.text = widget.initialName;
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Edit Name'),
+      title: Text(t.editName),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _controller,
             autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Enter name',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: t.enterName,
+              border: const OutlineInputBorder(),
             ),
             style: const TextStyle(fontSize: 20),
           ),
@@ -261,9 +355,9 @@ class _NameTypingDialogState extends State<NameTypingDialog> {
             children: [
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context, _controller.text); // Return the edited name
+                  Navigator.pop(context, _controller.text);
                 },
-                child: const Text('Done'),
+                child: Text(t.done),
               ),
             ],
           ),
@@ -273,21 +367,34 @@ class _NameTypingDialogState extends State<NameTypingDialog> {
   }
 }
 
-
 class SettingsScreen extends StatelessWidget {
   final Function(int) onUpdateParticipants;
   final int numParticipants;
+  final void Function(ThemeMode) onThemeChanged;
+  final ThemeMode currentThemeMode;
+  final void Function(Locale) onLocaleChanged;
+  final Locale currentLocale;
 
-  const SettingsScreen({required this.onUpdateParticipants, required this.numParticipants, super.key});
+  const SettingsScreen({
+    required this.onUpdateParticipants,
+    required this.numParticipants,
+    required this.onThemeChanged,
+    required this.currentThemeMode,
+    required this.onLocaleChanged,
+    required this.currentLocale,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+
     return Center(
       child: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Adjust Number of Participants', style: TextStyle(fontSize: 20)),
+            Text(t.adjustParticipants, style: const TextStyle(fontSize: 20)),
             Slider(
               value: numParticipants.toDouble(),
               min: 6,
@@ -296,8 +403,60 @@ class SettingsScreen extends StatelessWidget {
               label: numParticipants.toString(),
               onChanged: (value) => onUpdateParticipants(value.toInt()),
             ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity! < 0) {
+                  onThemeChanged(ThemeMode.dark);
+                } else if (details.primaryVelocity! > 0) {
+                  onThemeChanged(ThemeMode.light);
+                }
+              },
+              onLongPress: () => onThemeChanged(ThemeMode.system),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const Icon(Icons.swipe, size: 30),
+                    Text(
+                      t.swipeHint,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('${t.currentTheme}: ${currentThemeMode.name.toUpperCase()}'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(t.language, style: const TextStyle(fontSize: 18)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildLangButton(context, 'English', const Locale('en')),
+                _buildLangButton(context, 'Русский', const Locale('ru')),
+                _buildLangButton(context, 'Қазақша', const Locale('kk')),
+              ],
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLangButton(BuildContext context, String label, Locale locale) {
+    final isSelected = locale == currentLocale;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: ElevatedButton(
+        onPressed: () => onLocaleChanged(locale),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isSelected ? Colors.redAccent : Colors.grey,
+          foregroundColor: Colors.white,
+        ),
+        child: Text(label),
       ),
     );
   }
@@ -308,24 +467,19 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('🎅 Hidden Santa', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-          SizedBox(height: 16),
-          Text(
-            'Hidden Santa is a fun and simple mobile application designed to randomly assign Secret Santa gift-givers within a group. '
-                'Users can input a list of participant names, and the app will automatically and anonymously generate gift-giving pairs, ensuring that no one is assigned to themselves. '
-                'It’s perfect for holiday parties, team events, family gatherings, or any festive occasion.',
-          ),
-          SizedBox(height: 24),
-          Text('Credits:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          SizedBox(height: 8),
-          Text(
-              'Developed by Marlen, Dias, Azamat in the scope of the course “Crossplatform Development” at Astana IT University.\n'
-                  'Mentor (Teacher): Assistant Professor Abzal Kyzyrkanov'),
+        children: [
+          Text(t.aboutTitle, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          Text(t.aboutDescription),
+          const SizedBox(height: 24),
+          Text(t.credits, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(t.developerCredits),
         ],
       ),
     );
