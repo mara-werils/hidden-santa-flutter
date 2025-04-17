@@ -1,6 +1,6 @@
 workflows:
   hidden_santa_release:
-    name: Hidden Santa Release Build
+    name: Hidden Santa iOS Simulator Build
     max_build_duration: 30
     environment:
       flutter: stable
@@ -10,9 +10,9 @@ workflows:
         script: |
           flutter pub get
           flutter gen-l10n
-      - name: Build iOS .app
+      - name: Build iOS for simulator
         script: |
-          flutter build ios --release --no-codesign
+          flutter build ios --simulator
     artifacts:
-      - build/ios/iphoneos/Runner.app
+      - build/ios/iphonesimulator/Runner.app
       - build/app/outputs/flutter-apk/app-release.apk
