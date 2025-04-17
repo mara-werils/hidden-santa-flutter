@@ -2,7 +2,7 @@
   "@@locale": "ru",
   "appTitle": "Тайный Санта",
   "participants": "Участники",
-  "generatePairs": "Сгенерировать пары",
+  "generatePairs": "Сгенерировать",
   "reset": "Сбросить",
   "secretSantaPairs": "Пары Тайного Санты:",
   "editName": "Редактировать имя",

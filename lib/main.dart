@@ -215,101 +215,103 @@ class HomeScreen extends StatelessWidget {
     final crossAxisCount = isLandscape ? 4 : 2;
     final t = AppLocalizations.of(context)!;
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(t.participants, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(participants.length, (index) {
-                return GestureDetector(
-                  onTap: () => onEdit(index),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      child: Text(
-                        participants[index],
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.black
-                              : null,
-                        ),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(t.participants, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(participants.length, (index) {
+                  return GestureDetector(
+                    onTap: () => onEdit(index),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            alignment: WrapAlignment.spaceEvenly,
-            spacing: 20,
-            runSpacing: 10,
-            children: [
-              ElevatedButton.icon(
-                onPressed: onShuffle,
-                icon: const Icon(Icons.shuffle),
-                label: Text(t.generatePairs),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: onReset,
-                icon: const Icon(Icons.restart_alt),
-                label: Text(t.reset),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          if (shuffledPairs.isNotEmpty) ...[
-            Text(t.secretSantaPairs, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 5),
-            Expanded(
-              child: SizedBox(
-                width: double.infinity,
-                child: ListView.builder(
-                  itemCount: shuffledPairs.length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 5),
-                      color: Colors.red.shade50,
-                      child: ListTile(
-                        title: Text(
-                          shuffledPairs[index],
-                          textAlign: TextAlign.center,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        child: Text(
+                          participants[index],
                           style: TextStyle(
+                            fontSize: 16,
                             color: Theme.of(context).brightness == Brightness.dark
                                 ? Colors.black
                                 : null,
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                }),
               ),
             ),
+            const SizedBox(height: 20),
+            Wrap(
+              alignment: WrapAlignment.spaceEvenly,
+              spacing: 20,
+              runSpacing: 10,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: onShuffle,
+                  icon: const Icon(Icons.shuffle),
+                  label: Text(t.generatePairs),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: onReset,
+                  icon: const Icon(Icons.restart_alt),
+                  label: Text(t.reset),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            if (shuffledPairs.isNotEmpty) ...[
+              Text(t.secretSantaPairs, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 5),
+              Expanded(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ListView.builder(
+                    itemCount: shuffledPairs.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 5),
+                        color: Colors.red.shade50,
+                        child: ListTile(
+                          title: Text(
+                            shuffledPairs[index],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.black
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -468,20 +470,23 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
+    return SafeArea(child: SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(t.aboutTitle, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+          Text(t.aboutTitle, style: const TextStyle(
+              fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           Text(t.aboutDescription),
           const SizedBox(height: 24),
-          Text(t.credits, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(t.credits, style: const TextStyle(
+              fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(t.developerCredits),
         ],
       ),
+    ),
     );
   }
 }
