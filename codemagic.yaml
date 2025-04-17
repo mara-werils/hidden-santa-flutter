@@ -9,12 +9,10 @@ workflows:
       - name: Install Flutter dependencies
         script: |
           flutter pub get
+          flutter gen-l10n
       - name: Build iOS .app
         script: |
           flutter build ios --release --no-codesign
-      - name: Build Android .apk
-        script: |
-          flutter build apk --release
     artifacts:
       - build/ios/iphoneos/Runner.app
       - build/app/outputs/flutter-apk/app-release.apk
