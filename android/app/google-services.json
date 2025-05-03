@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "856617478135",
+    "project_id": "hidden-santa-220ff",
+    "storage_bucket": "hidden-santa-220ff.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:856617478135:android:bb07321fa4ba6dc17f70f2",
+        "android_client_info": {
+          "package_name": "com.example.hidden_santa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "856617478135-c5gorv9bnamnvkclqd30esdjld634mn3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hidden_santa",
+            "certificate_hash": "c39947b9f0ef361f05b9e6bdebcca924a494e06d"
+          }
+        },
+        {
+          "client_id": "856617478135-0bi83kq700gpf8ug66eboavdhe7va7cl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkN-fFLtwWiHaAZqx3rhjLt8u0hvAGvMQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "856617478135-0bi83kq700gpf8ug66eboavdhe7va7cl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "856617478135-2t22v0sogr54qpsvrc6csi3f8alh107f.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.hiddenSanta"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

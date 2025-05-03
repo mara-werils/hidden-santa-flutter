@@ -8,6 +8,7 @@
   "editName": "Атын өзгерту",
   "enterName": "Атын енгізіңіз",
   "done": "Дайын",
+  "profile": "Профиль",
   "adjustParticipants": "Қатысушылар санын өзгерту",
   "swipeHint": "Оңға сырғыту - Ашық, Солға - Қараңғы\nҰзақ басу - Жүйелік Тақырып",
   "currentTheme": "Ағымдағы",
@@ -21,5 +22,9 @@
   "language": "Тіл",
   "english": "Ағылшын",
   "russian": "Орысша",
-  "kazakh": "Қазақша"
+  "kazakh": "Қазақша",
+  "savePreferences": "Save Preferences",
+  "logout": "Logout",
+  "login": "Login",
+  "guestMode": "Guest Mode"
 }

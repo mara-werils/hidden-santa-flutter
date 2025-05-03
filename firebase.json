@@ -1,0 +1,97 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "hidden-santa-220ff",
+          "appId": "1:856617478135:android:bb07321fa4ba6dc17f70f2",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "hidden-santa-220ff",
+          "configurations": {
+            "android": "1:856617478135:android:bb07321fa4ba6dc17f70f2",
+            "ios": "1:856617478135:ios:c71d3555a0fc4f287f70f2",
+            "macos": "1:856617478135:ios:c71d3555a0fc4f287f70f2",
+            "web": "1:856617478135:web:c885ac6cdf4142987f70f2",
+            "windows": "1:856617478135:web:a751a5d62dc3284f7f70f2"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "dataconnect": {
+      "dataDir": "dataconnect/.dataconnect/pgliteData",
+      "port": 9399
+    },
+    "apphosting": {
+      "port": 5002,
+      "rootDirectory": "./"
+    },
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "database": {
+      "port": 9000
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  },
+  "dataconnect": {
+    "source": "dataconnect"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint",
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    },
+    {
+      "source": "hiddensanta",
+      "codebase": "hiddensanta",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "remoteconfig": {
+    "template": "remoteconfig.template.json"
+  },
+  "extensions": {},
+  "database": {
+    "rules": "database.rules.json"
+  }
+}

@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'services/user_pref_service.dart';
+import 'pages/register_page.dart';
 
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const HiddenSantaApp());
 }
+
 
 class HiddenSantaApp extends StatefulWidget {
   const HiddenSantaApp({super.key});
@@ -178,6 +190,7 @@ class _MainScreenState extends State<MainScreen> {
             onLocaleChanged: widget.onLocaleChanged,
             currentLocale: widget.currentLocale,
           ),
+          const ProfileScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -187,7 +200,10 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: const Icon(Icons.home), label: t.home),
           BottomNavigationBarItem(icon: const Icon(Icons.info), label: t.about),
           BottomNavigationBarItem(icon: const Icon(Icons.settings), label: t.settings),
+          BottomNavigationBarItem(icon: const Icon(Icons.person), label: t.profile),
         ],
+        selectedItemColor: Colors.grey,
+        unselectedItemColor: Colors.grey,
       ),
     );
   }
@@ -487,6 +503,328 @@ class AboutScreen extends StatelessWidget {
         ],
       ),
     ),
+    );
+  }
+}
+
+class ProfileScreen extends StatefulWidget {
+  final bool isGuest;
+  const ProfileScreen({super.key, this.isGuest = false});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String? _userEmail;
+  final _prefs = UserPrefService();
+  ThemeMode _currentThemeMode = ThemeMode.light;
+  Locale _currentLocale = const Locale('en');
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+    if (!widget.isGuest && FirebaseAuth.instance.currentUser != null) {
+      _loadPreferences();
+    }
+  }
+
+  void _loadUser() {
+    final user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      _userEmail = user?.email;
+    });
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await _prefs.loadPreferences();
+    if (prefs != null) {
+      final language = prefs['language'] ?? 'en';
+      final supportedLanguages = ['en', 'ru', 'kk'];
+      setState(() {
+        _currentThemeMode = _toThemeMode(prefs['theme'] ?? 'light');
+        _currentLocale = Locale(
+          supportedLanguages.contains(language) ? language : 'en',
+        );
+      });
+    }
+  }
+
+
+  Future<void> _savePreferences() async {
+    await _prefs.savePreferences(
+      theme: _themeToString(_currentThemeMode),
+      language: _currentLocale.languageCode,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Preferences saved")),
+    );
+  }
+
+  ThemeMode _toThemeMode(String value) {
+    switch (value) {
+      case 'dark':
+        return ThemeMode.dark;
+      case 'system':
+        return ThemeMode.system;
+      default:
+        return ThemeMode.light;
+    }
+  }
+
+  String _themeToString(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.dark:
+        return 'dark';
+      case ThemeMode.system:
+        return 'system';
+      default:
+        return 'light';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("Profile")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                if (widget.isGuest || user == null) ...[
+                  const Text("Guest Mode", style: TextStyle(fontSize: 18)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
+                      );
+                    },
+                    child: const Text("Login"),
+                  ),
+                ] else ...[
+                  Text('Logged in as: $_userEmail', style: const TextStyle(fontSize: 18)),
+                  const SizedBox(height: 20),
+                  DropdownButton<ThemeMode>(
+                    value: _currentThemeMode,
+                    onChanged: (value) {
+                      setState(() {
+                        _currentThemeMode = value!;
+                      });
+                    },
+                    items: const [
+                      DropdownMenuItem(
+                        value: ThemeMode.light,
+                        child: Text('Light Theme'),
+                      ),
+                      DropdownMenuItem(
+                        value: ThemeMode.dark,
+                        child: Text('Dark Theme'),
+                      ),
+                      DropdownMenuItem(
+                        value: ThemeMode.system,
+                        child: Text('System Default'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButton<Locale>(
+                    value: _currentLocale,
+                    onChanged: (value) {
+                      setState(() {
+                        _currentLocale = value!;
+                      });
+                    },
+                    items: const [
+                      DropdownMenuItem(
+                        value: Locale('en'),
+                        child: Text('English'),
+                      ),
+                      DropdownMenuItem(
+                        value: Locale('ru'),
+                        child: Text('Russian'),
+                      ),
+                      DropdownMenuItem(
+                        value: Locale('kk'),
+                        child: Text('Kazakh'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _savePreferences,
+                    child: const Text("Save Preferences"),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
+                      );
+                    },
+                    child: const Text("Logout"),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+///////////////////////////////////////
+
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _auth = FirebaseAuth.instance;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  String _errorMessage = "";
+
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = "";
+    });
+
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      );
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Login failed: ${e.toString()}";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = "";
+    });
+
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await _auth.signInWithCredential(credential);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      );
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Google login failed: ${e.toString()}";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _loginAsGuest() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfileScreen(isGuest: true)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Login")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            TextField(
+              controller: _passwordController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+            const SizedBox(height: 20),
+            if (_isLoading)
+              const CircularProgressIndicator()
+            else ...[
+              ElevatedButton(
+                onPressed: _login,
+                child: const Text("Login"),
+              ),
+              ElevatedButton(
+                onPressed: _loginWithGoogle,
+                child: const Text("Login with Google"),
+              ),
+              ElevatedButton(
+                onPressed: _loginAsGuest,
+                child: const Text("Continue as Guest"),
+              ),
+            ],
+            if (_errorMessage.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text(
+                  _errorMessage,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RegisterPage()),
+                );
+              },
+              child: const Text("Don't have an account? Sign up"),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

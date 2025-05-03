@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>856617478135-2t22v0sogr54qpsvrc6csi3f8alh107f.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.856617478135-2t22v0sogr54qpsvrc6csi3f8alh107f</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAs_3_lZT7Ny39ZYIgyPbV1Ko3Rgp8cm0M</string>
+	<key>GCM_SENDER_ID</key>
+	<string>856617478135</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.hiddenSanta</string>
+	<key>PROJECT_ID</key>
+	<string>hidden-santa-220ff</string>
+	<key>STORAGE_BUCKET</key>
+	<string>hidden-santa-220ff.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:856617478135:ios:c71d3555a0fc4f287f70f2</string>
+</dict>
+</plist>

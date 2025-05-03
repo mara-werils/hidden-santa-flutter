@@ -8,6 +8,7 @@
   "editName": "Редактировать имя",
   "enterName": "Введите имя",
   "done": "Готово",
+  "profile": "Профиль",
   "adjustParticipants": "Настройка количества участников",
   "swipeHint": "Смахните вправо - Светлая, влево — Темная\nЗажмите — Системная тема",
   "currentTheme": "Текущая",
@@ -21,5 +22,9 @@
   "language": "Язык",
   "english": "Английский",
   "russian": "Русский",
-  "kazakh": "Казахский"
+  "kazakh": "Казахский",
+  "savePreferences": "Save Preferences",
+  "logout": "Logout",
+  "login": "Login",
+  "guestMode": "Guest Mode"
 }
