@@ -26,5 +26,6 @@
   "savePreferences": "Save Preferences",
   "logout": "Logout",
   "login": "Login",
+  "register": "Register",
   "guestMode": "Guest Mode"
 }
