@@ -234,7 +234,7 @@ class _MainScreenState extends State<MainScreen> {
               ],
             ),
           ),
-          if (!_isOffline && FirebaseAuth.instance.currentUser != null)
+          if (_selectedIndex != 0 && !_isOffline && FirebaseAuth.instance.currentUser != null)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: ElevatedButton.icon(
