@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../services/user_pref_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   final Function(int) onUpdateParticipants;
@@ -24,19 +25,41 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final isGuest = FirebaseAuth.instance.currentUser == null;
+    final prefs = UserPrefService();
+
+    void _updateTheme(ThemeMode mode) {
+      onThemeChanged(mode);
+      prefs.savePreferences(
+        theme: mode.name,
+        language: currentLocale.languageCode,
+        updatedAt: DateTime.now(),
+      );
+    }
+
+    void _updateLocale(Locale locale) {
+      onLocaleChanged(locale);
+      prefs.savePreferences(
+        theme: currentThemeMode.name,
+        language: locale.languageCode,
+        updatedAt: DateTime.now(),
+      );
+    }
 
     if (isGuest) {
-      return const Center(
+      final t = AppLocalizations.of(context)!;
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(24.0),
           child: Text(
-            'Settings are only available to logged-in users.',
-            style: TextStyle(fontSize: 18),
+            t.guestModed,
+            style: const TextStyle(fontSize: 18),
             textAlign: TextAlign.center,
           ),
         ),
       );
     }
+
+
     return Center(
       child: SingleChildScrollView(
         child: Column(
@@ -55,12 +78,12 @@ class SettingsScreen extends StatelessWidget {
             GestureDetector(
               onHorizontalDragEnd: (details) {
                 if (details.primaryVelocity! < 0) {
-                  onThemeChanged(ThemeMode.dark);
+                  _updateTheme(ThemeMode.dark);
                 } else if (details.primaryVelocity! > 0) {
-                  onThemeChanged(ThemeMode.light);
+                  _updateTheme(ThemeMode.light);
                 }
               },
-              onLongPress: () => onThemeChanged(ThemeMode.system),
+              onLongPress: () => _updateTheme(ThemeMode.system),
               child: Container(
                 padding: const EdgeInsets.all(16),
                 margin: const EdgeInsets.all(16),
@@ -79,9 +102,9 @@ class SettingsScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildLangButton(context, 'English', const Locale('en')),
-                _buildLangButton(context, 'Русский', const Locale('ru')),
-                _buildLangButton(context, 'Қазақша', const Locale('kk')),
+                _buildLangButton('English', const Locale('en'), _updateLocale),
+                _buildLangButton('Русский', const Locale('ru'), _updateLocale),
+                _buildLangButton('Қазақша', const Locale('kk'), _updateLocale),
               ],
             ),
           ],
@@ -90,12 +113,12 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLangButton(BuildContext context, String label, Locale locale) {
+  Widget _buildLangButton(String label, Locale locale, Function(Locale) onTap) {
     final isSelected = locale == currentLocale;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: ElevatedButton(
-        onPressed: () => onLocaleChanged(locale),
+        onPressed: () => onTap(locale),
         style: ElevatedButton.styleFrom(
           backgroundColor: isSelected ? Colors.redAccent : Colors.grey,
           foregroundColor: Colors.white,

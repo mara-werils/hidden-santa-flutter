@@ -1,38 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 import 'screens/main_screen.dart';
+import 'state/theme_notifier.dart';
+import 'state/locale_notifier.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class HiddenSantaApp extends StatefulWidget {
+class HiddenSantaApp extends StatelessWidget {
   const HiddenSantaApp({super.key});
 
   @override
-  State<HiddenSantaApp> createState() => _HiddenSantaAppState();
-}
-
-class _HiddenSantaAppState extends State<HiddenSantaApp> {
-  ThemeMode _themeMode = ThemeMode.system;
-  Locale _locale = const Locale('kk');
-
-  void _toggleTheme(ThemeMode mode) {
-    setState(() {
-      _themeMode = mode;
-    });
-  }
-
-  void _changeLocale(Locale locale) {
-    setState(() {
-      _locale = locale;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final themeMode = context.watch<ThemeNotifier>().currentTheme;
+    final locale = context.watch<LocaleNotifier>().currentLocale;
+
     return MaterialApp(
       title: 'Hidden Santa',
       debugShowCheckedModeBanner: false,
-      themeMode: _themeMode,
+      themeMode: themeMode,
       theme: ThemeData(
         brightness: Brightness.light,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.redAccent),
@@ -44,7 +30,7 @@ class _HiddenSantaAppState extends State<HiddenSantaApp> {
             seedColor: Colors.red, brightness: Brightness.dark),
         useMaterial3: true,
       ),
-      locale: _locale,
+      locale: locale,
       supportedLocales: const [Locale('en'), Locale('ru'), Locale('kk')],
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -60,29 +46,13 @@ class _HiddenSantaAppState extends State<HiddenSantaApp> {
         }
         return const Locale('en');
       },
-      home: EntryPoint(
-        themeMode: _themeMode,
-        onThemeChanged: _toggleTheme,
-        locale: _locale,
-        onLocaleChanged: _changeLocale,
-      ),
+      home: const EntryPoint(),
     );
   }
 }
 
 class EntryPoint extends StatelessWidget {
-  final ThemeMode themeMode;
-  final void Function(ThemeMode) onThemeChanged;
-  final Locale locale;
-  final void Function(Locale) onLocaleChanged;
-
-  const EntryPoint({
-    super.key,
-    required this.themeMode,
-    required this.onThemeChanged,
-    required this.locale,
-    required this.onLocaleChanged,
-  });
+  const EntryPoint({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -94,12 +64,7 @@ class EntryPoint extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-
         return MainScreen(
-          currentThemeMode: themeMode,
-          onThemeChanged: onThemeChanged,
-          currentLocale: locale,
-          onLocaleChanged: onLocaleChanged,
         );
       },
     );

@@ -27,5 +27,15 @@
   "logout": "Logout",
   "login": "Login",
   "register": "Register",
-  "guestMode": "Guest Mode"
+  "guestMode": "Guest Mode",
+  "offlineWarning": "You are offline. Some features may be unavailable.",
+  "syncNow": "Sync Now",
+  "loginToSync": "Please log in to sync data.",
+  "syncedToFirebase": "Data synced to Firebase!",
+  "syncFailed": "Sync failed",
+  "history": "History",
+  "guestModed": "You're in guest mode.",
+  "goToLogin": "Go to Login",
+  "email": "Email",
+  "theme": "Theme"
 }

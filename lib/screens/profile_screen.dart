@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../services/user_pref_service.dart';
+import '../state/theme_notifier.dart';
+import '../state/locale_notifier.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onLogout;
@@ -14,15 +19,12 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String? _userEmail;
   final _prefs = UserPrefService();
-  ThemeMode _currentThemeMode = ThemeMode.light;
-  Locale _currentLocale = const Locale('en');
-  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
-    _loadPreferences();
+    _loadPreferencesAndApply();
   }
 
   void _loadUser() {
@@ -32,41 +34,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  Future<void> _loadPreferences() async {
+  Future<void> _loadPreferencesAndApply() async {
     final prefs = await _prefs.loadPreferences();
     if (prefs != null) {
-      final language = prefs['language'] ?? 'en';
+      final themeStr = prefs['theme'] ?? 'light';
+      final langStr = prefs['language'] ?? 'en';
       final supportedLanguages = ['en', 'ru', 'kk'];
-      setState(() {
-        _currentThemeMode = _toThemeMode(prefs['theme'] ?? 'light');
-        _currentLocale = Locale(
-          supportedLanguages.contains(language) ? language : 'en',
-        );
+
+      final themeMode = _toThemeMode(themeStr);
+      final locale = Locale(supportedLanguages.contains(langStr) ? langStr : 'en');
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<ThemeNotifier>().setTheme(themeMode);
+        context.read<LocaleNotifier>().setLocale(locale);
       });
     }
   }
 
-  Future<void> _savePreferences() async {
-    setState(() => _isSaving = true);
-    try {
-      await _prefs.savePreferences(
-        theme: _themeToString(_currentThemeMode),
-        language: _currentLocale.languageCode,
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Preferences saved")),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to save preferences: $e")),
-      );
-    } finally {
-      setState(() => _isSaving = false);
-    }
-  }
-
   ThemeMode _toThemeMode(String value) {
-    switch (value) {
+    switch (value.toLowerCase()) {
       case 'dark':
         return ThemeMode.dark;
       case 'system':
@@ -76,21 +62,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  String _themeToString(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.dark:
-        return 'dark';
-      case ThemeMode.system:
-        return 'system';
-      default:
-        return 'light';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final isGuest = user == null;
+    final t = AppLocalizations.of(context)!;
+    final isGuest = FirebaseAuth.instance.currentUser == null;
+    final theme = context.watch<ThemeNotifier>().currentTheme;
+    final locale = context.watch<LocaleNotifier>().currentLocale;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -98,75 +75,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: SingleChildScrollView(
           child: isGuest
               ? Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.lock_outline, size: 60),
               const SizedBox(height: 16),
-              const Text(
-                "You're in guest mode.",
-                style: TextStyle(fontSize: 18),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "Please log in to access your profile.",
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
+              Text(t.guestModed),
               ElevatedButton(
                 onPressed: widget.onLogout,
-                child: const Text("Go to Login"),
+                child: Text(t.goToLogin),
               ),
             ],
           )
               : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Logged in as: $_userEmail', style: const TextStyle(fontSize: 18)),
-              const SizedBox(height: 20),
-              DropdownButton<ThemeMode>(
-                value: _currentThemeMode,
-                onChanged: (value) {
-                  setState(() {
-                    _currentThemeMode = value!;
-                  });
-                },
-                items: const [
-                  DropdownMenuItem(value: ThemeMode.light, child: Text('Light Theme')),
-                  DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark Theme')),
-                  DropdownMenuItem(value: ThemeMode.system, child: Text('System Default')),
-                ],
-              ),
+              Text('${t.email}: $_userEmail', style: const TextStyle(fontSize: 18)),
               const SizedBox(height: 16),
-              DropdownButton<Locale>(
-                value: _currentLocale,
-                onChanged: (value) {
-                  setState(() {
-                    _currentLocale = value!;
-                  });
-                },
-                items: const [
-                  DropdownMenuItem(value: Locale('en'), child: Text('English')),
-                  DropdownMenuItem(value: Locale('ru'), child: Text('Russian')),
-                  DropdownMenuItem(value: Locale('kk'), child: Text('Kazakh')),
-                ],
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _savePreferences,
-                child: _isSaving
-                    ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                    : const Text("Save Preferences"),
-              ),
-              const SizedBox(height: 16),
+              Text('${t.theme}: ${theme.name.toUpperCase()}'),
+              Text('${t.language}: ${locale.languageCode.toUpperCase()}'),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
                   widget.onLogout();
                 },
-                child: const Text("Logout"),
+                child: Text(t.logout),
               ),
             ],
           ),

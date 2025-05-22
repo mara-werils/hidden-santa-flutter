@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import '../services/local_storage_service.dart';
 import '../widgets/name_typing_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,20 +14,11 @@ import 'login_page.dart';
 import 'register_page.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../state/theme_notifier.dart';
+import '../state/locale_notifier.dart';
 
 class MainScreen extends StatefulWidget {
-  final void Function(ThemeMode) onThemeChanged;
-  final ThemeMode currentThemeMode;
-  final void Function(Locale) onLocaleChanged;
-  final Locale currentLocale;
-
-  const MainScreen({
-    super.key,
-    required this.onThemeChanged,
-    required this.currentThemeMode,
-    required this.onLocaleChanged,
-    required this.currentLocale,
-  });
+  const MainScreen({super.key});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -60,11 +52,8 @@ class _MainScreenState extends State<MainScreen> {
     });
 
     _storage.saveShuffledPairs(shuffledPairs);
-
     _firestore.saveHistory(shuffledPairs);
   }
-
-
 
   void _resetPairs() {
     setState(() {
@@ -101,9 +90,11 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _syncDataToFirebase() async {
     final user = FirebaseAuth.instance.currentUser;
+    final t = AppLocalizations.of(context)!;
+
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please log in to sync data.")),
+        SnackBar(content: Text(t.loginToSync)),
       );
       return;
     }
@@ -116,36 +107,31 @@ class _MainScreenState extends State<MainScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Data synced to Firebase!")),
+        SnackBar(content: Text(t.syncedToFirebase)),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Sync failed: ${e.toString()}")),
+        SnackBar(content: Text('${t.syncFailed}: ${e.toString()}')),
       );
     }
   }
-
-
 
   @override
   void initState() {
     super.initState();
 
     Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-      print('Connectivity changed: $result'); // 🧪 DEBUG
       setState(() {
         _isOffline = result == ConnectivityResult.none;
       });
     });
-
 
     Connectivity().checkConnectivity().then((result) {
-      print('Initial connectivity: $result'); // 🧪 DEBUG
       setState(() {
         _isOffline = result == ConnectivityResult.none;
       });
     });
-    // Load saved participants and shuffled pairs
+
     _storage.loadParticipants().then((loaded) {
       if (loaded.isNotEmpty) {
         setState(() => participants = loaded);
@@ -159,11 +145,14 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    final themeMode = context.watch<ThemeNotifier>().currentTheme;
+    final locale = context.watch<LocaleNotifier>().currentLocale;
+    final onThemeChanged = context.read<ThemeNotifier>().setTheme;
+    final onLocaleChanged = context.read<LocaleNotifier>().setLocale;
 
     return Scaffold(
       body: Column(
@@ -175,12 +164,12 @@ class _MainScreenState extends State<MainScreen> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.wifi_off, color: Colors.red),
-                  SizedBox(width: 10),
+                children: [
+                  const Icon(Icons.wifi_off, color: Colors.red),
+                  const SizedBox(width: 10),
                   Text(
-                    "You are offline. Some features may be unavailable.",
-                    style: TextStyle(color: Colors.grey),
+                    t.offlineWarning,
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
@@ -200,10 +189,10 @@ class _MainScreenState extends State<MainScreen> {
                 SettingsScreen(
                   onUpdateParticipants: _updateParticipants,
                   numParticipants: _numParticipants,
-                  onThemeChanged: widget.onThemeChanged,
-                  currentThemeMode: widget.currentThemeMode,
-                  onLocaleChanged: widget.onLocaleChanged,
-                  currentLocale: widget.currentLocale,
+                  onThemeChanged: onThemeChanged,
+                  currentThemeMode: themeMode,
+                  onLocaleChanged: onLocaleChanged,
+                  currentLocale: locale,
                 ),
                 if (!isLoggedIn)
                   _showRegister
@@ -234,16 +223,15 @@ class _MainScreenState extends State<MainScreen> {
               ],
             ),
           ),
-          if (_selectedIndex != 0 && !_isOffline && FirebaseAuth.instance.currentUser != null)
+          if (_selectedIndex != 0 && _selectedIndex != 1 && !_isOffline && FirebaseAuth.instance.currentUser != null)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.sync),
-                label: const Text("Sync Now"),
+                label: Text(t.syncNow),
                 onPressed: _syncDataToFirebase,
               ),
             ),
-
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -251,7 +239,7 @@ class _MainScreenState extends State<MainScreen> {
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
-            _showRegister = false; // reset to login on Profile tab
+            _showRegister = false;
           });
         },
         items: [
@@ -266,7 +254,7 @@ class _MainScreenState extends State<MainScreen> {
                 ? t.register
                 : t.login,
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+          BottomNavigationBarItem(icon: const Icon(Icons.history), label: t.history),
         ],
         selectedItemColor: Colors.grey,
         unselectedItemColor: Colors.grey,
